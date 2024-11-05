@@ -28,21 +28,30 @@ def compute_mean_distance(coordinates,R=1.0):
     mean_dist = np.mean(distances)
     return mean_dist
 
+def zscore(coordinates,R=1.0):
+    n=len(coordinates)
+    mean_dist = compute_mean_distance(coordinates,R)
+    A = 4*np.pi*R**2
+    dexpected = 1.0 / (2 * np.sqrt(n / A))
+    sigma = 0.26136 / np.sqrt(n**2 / A)
+    Z = (mean_dist - dexpected) / sigma
+    return Z
+
 rVenus = 6051.8
 vpoints=pd.read_csv('Venus_Craters.csv',usecols=['lat', 'lon'])
 
 longitude=np.deg2rad(vpoints['lon'].values)
 latitude=np.deg2rad(vpoints['lat'].values)
-coordinates = np.vstack((latitude,longitude)).T 
+ven_coord = np.vstack((latitude,longitude)).T 
+ncraters=len(ven_coord)
+rnd_z= []
 
-ven_mean_dist = compute_mean_distance(coordinates,R=rVenus)
-
-rnd_mean_dist = []
-for _ in range(100):
-    rnd_mean_dist.append(compute_mean_distance(randomp_points(len(coordinates)),R=rVenus))
+for _ in range(1000):
+    rnd_z.append(zscore(randomp_points(ncraters),R=rVenus))
    
-rnd_mean_stdev = np.std(rnd_mean_dist)
-rnd_mean_dist = np.mean(rnd_mean_dist) 
+rnd_z_stdev = np.std(rnd_z)
+rnd_z_mean = np.mean(rnd_z)
 
-print(f"Mean distance (Venus) : {ven_mean_dist:.1f} km")
-print(f"Mean distance (Random): {rnd_mean_dist:.1f} ± {rnd_mean_stdev:.1f} km")
+
+print(f"Z-score (Venus) : {zscore(ven_coord)}" )
+print(f"Z-score (Random): {rnd_z_mean:.1f} ± {rnd_z_stdev:.1f}")
